@@ -4,6 +4,7 @@ from .tasks import (
     get_task,
     set_reward,
     set_error,
+    set_ground_truth,
     save_preprocessed_tasks,
     update_status,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "get_task",
     "set_reward",
     "set_error",
+    "set_ground_truth",
     "save_preprocessed_tasks",
     "update_status",
     "save_file",

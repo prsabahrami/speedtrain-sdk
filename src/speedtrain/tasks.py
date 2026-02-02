@@ -59,6 +59,20 @@ def set_error(task_id: str, error: str) -> Task:
     return Task.from_api_response(response)
 
 
+def set_ground_truth(*, task_id: str, ground_truth: bytes | None) -> Task:
+    if ground_truth is None:
+        response = call_rpc("ClearTaskGroundTruth", {"id": task_id})
+        return Task.from_api_response(response)
+    response = call_rpc(
+        "SetTaskGroundTruth",
+        {
+            "id": task_id,
+            "groundTruth": base64.b64encode(ground_truth).decode("ascii"),
+        },
+    )
+    return Task.from_api_response(response)
+
+
 def serialize_content_part(part: dict[str, Any]) -> dict[str, Any]:
     data: dict[str, Any] = {"type": part.get("type", "")}
     if "text" in part:
