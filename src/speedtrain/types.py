@@ -1,3 +1,4 @@
+import base64
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -24,6 +25,7 @@ class Task:
     metadata: dict[str, Any]
     source_file_id: str
     status: str
+    ground_truth: bytes | None = None
     reward: float | None = None
     completion: Completion | None = None
     error: str | None = None
@@ -55,6 +57,11 @@ class Task:
         status_raw = data.get("status", "TASK_STATUS_UNSPECIFIED")
         status = status_raw.replace("TASK_STATUS_", "").lower()
 
+        ground_truth_raw = data.get("groundTruth")
+        ground_truth = None
+        if ground_truth_raw:
+            ground_truth = base64.b64decode(ground_truth_raw)
+
         return cls(
             id=data.get("id", ""),
             document_path=data.get("documentPath", ""),
@@ -62,6 +69,7 @@ class Task:
             metadata=metadata,
             source_file_id=data.get("sourceFileId", ""),
             status=status,
+            ground_truth=ground_truth,
             reward=data.get("reward"),
             completion=completion,
             error=data.get("error"),
