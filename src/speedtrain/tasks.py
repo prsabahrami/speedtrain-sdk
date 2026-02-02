@@ -1,5 +1,8 @@
+import json
+from typing import Any
+
 from .client import call_rpc, get_context
-from .types import Task
+from .types import Message, Task
 
 
 STATUS_MAP = {
@@ -47,12 +50,68 @@ def set_error(task_id: str, error: str) -> Task:
     return Task.from_api_response(response)
 
 
-def mark_processed(task_ids: list[str]) -> int:
-    response = call_rpc(
-        "BatchUpdateTaskStatus",
-        {"ids": task_ids, "status": "TASK_STATUS_INFERRED"},
-    )
-    return response.get("updatedCount", 0)
+def serialize_content_part(part: dict[str, Any]) -> dict[str, Any]:
+    data: dict[str, Any] = {"type": part.get("type", "")}
+    if "text" in part:
+        data["text"] = part["text"]
+    image_url = part.get("imageUrl") or part.get("image_url")
+    if image_url:
+        if isinstance(image_url, dict):
+            data["imageUrl"] = {"url": image_url.get("url", "")}
+        else:
+            data["imageUrl"] = {"url": str(image_url)}
+    return data
+
+
+def serialize_message(message: Message) -> dict[str, Any]:
+    data: dict[str, Any] = {"role": message.role}
+    if message.content_text is not None:
+        data["contentText"] = message.content_text
+    if message.content_parts:
+        data["contentParts"] = [
+            serialize_content_part(part) for part in message.content_parts
+        ]
+    return data
+
+
+def normalize_status(status: str) -> str:
+    if not status:
+        return "TASK_STATUS_UNSPECIFIED"
+    status_upper = status.upper()
+    if status_upper.startswith("TASK_STATUS_"):
+        return status_upper
+    mapped = STATUS_MAP.get(status.lower())
+    if not mapped:
+        raise ValueError(f"Invalid status: {status}")
+    return mapped
+
+
+def serialize_task(task: Task) -> dict[str, Any]:
+    data: dict[str, Any] = {
+        "documentPath": task.document_path,
+        "trace": [serialize_message(msg) for msg in task.trace],
+        "metadataJson": json.dumps(task.metadata),
+        "sourceFileId": task.source_file_id,
+        "status": normalize_status(task.status),
+    }
+    if task.reward is not None:
+        data["reward"] = task.reward
+    if task.error:
+        data["error"] = task.error
+    return data
+
+
+def save_preprocessed_tasks(tasks: list[Task]) -> dict[str, Any]:
+    ctx = get_context()
+    payload = {
+        "rawDatasetId": ctx["rawDatasetId"],
+        "tasks": [serialize_task(task) for task in tasks],
+    }
+    response = call_rpc("SavePreprocessedTasks", payload)
+    return {
+        "preprocessed_dataset_id": response.get("preprocessedDatasetId", ""),
+        "task_ids": response.get("taskIds", []),
+    }
 
 
 def update_status(task_id: str, status: str) -> Task:
