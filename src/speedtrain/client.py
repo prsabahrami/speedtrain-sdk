@@ -49,3 +49,10 @@ def get_raw_dataset_id() -> str:
 def get_notebook_type() -> str:
     ntype = get_context().get("notebookType", "")
     return ntype.replace("NOTEBOOK_TYPE_", "").lower()
+
+
+def get_preprocessed_dataset_id() -> str:
+    preprocessed_dataset_id = get_context().get("preprocessedDatasetId")
+    if not preprocessed_dataset_id:
+        raise RuntimeError("Notebook not attached to any preprocessed dataset")
+    return preprocessed_dataset_id

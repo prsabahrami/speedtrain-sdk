@@ -18,7 +18,15 @@ STATUS_MAP = {
 
 def get_tasks(status: str | None = None) -> list[Task]:
     ctx = get_context()
-    payload: dict = {"rawDatasetId": ctx["rawDatasetId"]}
+    payload: dict = {}
+    notebook_type = ctx.get("notebookType")
+    if notebook_type == "NOTEBOOK_TYPE_REWARD":
+        preprocessed_dataset_id = ctx.get("preprocessedDatasetId")
+        if not preprocessed_dataset_id:
+            raise RuntimeError("Notebook not attached to any preprocessed dataset")
+        payload["trainingDatasetId"] = preprocessed_dataset_id
+    else:
+        payload["rawDatasetId"] = ctx["rawDatasetId"]
 
     if status:
         status_upper = status.upper()

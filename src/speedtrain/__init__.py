@@ -1,4 +1,4 @@
-from .client import get_raw_dataset_id, get_notebook_type
+from .client import get_raw_dataset_id, get_notebook_type, get_preprocessed_dataset_id
 from .tasks import (
     get_tasks,
     get_task,
@@ -13,6 +13,7 @@ from .types import Task, Completion
 __all__ = [
     "get_raw_dataset_id",
     "get_notebook_type",
+    "get_preprocessed_dataset_id",
     "get_tasks",
     "get_task",
     "set_reward",
