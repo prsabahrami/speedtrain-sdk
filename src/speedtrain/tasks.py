@@ -59,6 +59,14 @@ def set_error(task_id: str, error: str) -> Task:
     return Task.from_api_response(response)
 
 
+def set_task_metadata(task_id: str, metadata: dict[str, Any]) -> Task:
+    response = call_rpc(
+        "SetTaskMetadata",
+        {"id": task_id, "metadataJson": json.dumps(metadata)},
+    )
+    return Task.from_api_response(response)
+
+
 def set_task_split(*, task_id: str, split: TaskSplit) -> Task:
     if not isinstance(split, TaskSplit):
         raise TypeError("split must be a TaskSplit")
