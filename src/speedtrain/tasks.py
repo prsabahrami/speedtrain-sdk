@@ -3,7 +3,7 @@ import json
 from typing import Any
 
 from .client import call_rpc, get_context
-from .types import Message, Task
+from .types import Message, Task, TaskSplit
 
 
 STATUS_MAP = {
@@ -56,6 +56,13 @@ def set_reward(task_id: str, reward: float) -> Task:
 
 def set_error(task_id: str, error: str) -> Task:
     response = call_rpc("SetTaskError", {"id": task_id, "error": error})
+    return Task.from_api_response(response)
+
+
+def set_task_split(*, task_id: str, split: TaskSplit) -> Task:
+    if not isinstance(split, TaskSplit):
+        raise TypeError("split must be a TaskSplit")
+    response = call_rpc("SetTaskSplit", {"id": task_id, "split": split.value})
     return Task.from_api_response(response)
 
 

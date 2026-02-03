@@ -4,12 +4,13 @@ from .tasks import (
     get_task,
     set_reward,
     set_error,
+    set_task_split,
     set_ground_truth,
     save_preprocessed_tasks,
     update_status,
 )
 from .files import save_file, load_document
-from .types import Task, Completion
+from .types import Task, Completion, TaskSplit
 
 __all__ = [
     "get_raw_dataset_id",
@@ -19,6 +20,7 @@ __all__ = [
     "get_task",
     "set_reward",
     "set_error",
+    "set_task_split",
     "set_ground_truth",
     "save_preprocessed_tasks",
     "update_status",
@@ -26,4 +28,5 @@ __all__ = [
     "load_document",
     "Task",
     "Completion",
+    "TaskSplit",
 ]

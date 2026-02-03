@@ -1,6 +1,12 @@
 import base64
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any
+
+
+class TaskSplit(Enum):
+    TRAIN = "TASK_SPLIT_TRAIN"
+    TEST = "TASK_SPLIT_TEST"
 
 
 @dataclass
