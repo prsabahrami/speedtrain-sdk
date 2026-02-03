@@ -124,6 +124,8 @@ def serialize_task(task: Task) -> dict[str, Any]:
         "sourceFileId": task.source_file_id,
         "status": normalize_status(task.status),
     }
+    if task.completion is not None:
+        data["completion"] = {"text": task.completion.text}
     if task.ground_truth is not None:
         data["groundTruth"] = base64.b64encode(task.ground_truth).decode("ascii")
     if task.reward is not None:
