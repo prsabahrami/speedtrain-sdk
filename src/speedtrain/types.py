@@ -33,6 +33,7 @@ class Task:
     status: str
     ground_truth: bytes | None = None
     reward: float | None = None
+    reward_fn_id: str | None = None
     completion: Completion | None = None
     error: str | None = None
 
@@ -77,6 +78,7 @@ class Task:
             status=status,
             ground_truth=ground_truth,
             reward=data.get("reward"),
+            reward_fn_id=data.get("rewardFnId"),
             completion=completion,
             error=data.get("error"),
         )

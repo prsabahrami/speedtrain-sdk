@@ -9,6 +9,8 @@ from .tasks import (
     set_ground_truth,
     save_preprocessed_tasks,
     update_status,
+    publish_reward_function,
+    set_reward_function_for_dataset,
 )
 from .files import save_file, load_document
 from .types import Task, Completion, TaskSplit
@@ -26,6 +28,8 @@ __all__ = [
     "set_ground_truth",
     "save_preprocessed_tasks",
     "update_status",
+    "publish_reward_function",
+    "set_reward_function_for_dataset",
     "save_file",
     "load_document",
     "Task",

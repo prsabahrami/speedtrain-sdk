@@ -138,9 +138,59 @@ def serialize_task(task: Task) -> dict[str, Any]:
         data["groundTruth"] = base64.b64encode(task.ground_truth).decode("ascii")
     if task.reward is not None:
         data["reward"] = task.reward
+    if task.reward_fn_id:
+        data["rewardFnId"] = task.reward_fn_id
     if task.error:
         data["error"] = task.error
     return data
+
+
+def publish_reward_function(score_fn) -> str:
+    import hashlib
+    import inspect
+    import os
+    from pathlib import Path
+
+    if score_fn.__name__ != "score":
+        raise ValueError("score_fn must be named score")
+    source = inspect.getsource(score_fn)
+    module_bytes = source.encode("utf-8")
+    hash_value = hashlib.sha256(module_bytes).hexdigest()
+    notebook_path = os.environ.get("JPY_SESSION_NAME")
+    if not notebook_path:
+        raise RuntimeError("Must run from Speedtrain notebook")
+    notebook_id = Path(notebook_path).stem
+    reward_dir = Path("/data/reward_functions") / notebook_id
+    reward_dir.mkdir(parents=True, exist_ok=True)
+    module_path = reward_dir / f"{hash_value}.py"
+    module_path.write_text(source, encoding="utf-8")
+    reward_fn_id = f"{notebook_id}:{hash_value}"
+    response = call_rpc(
+        "PublishRewardFunction",
+        {
+            "notebookId": notebook_id,
+            "rewardFnId": reward_fn_id,
+            "rewardFnPath": str(module_path),
+            "rewardFnHash": hash_value,
+        },
+    )
+    reward_function = response.get("rewardFunction", {})
+    return reward_function.get("id", reward_fn_id)
+
+
+def set_reward_function_for_dataset(
+    *, reward_fn_id: str, training_dataset_id: str | None = None
+) -> dict[str, Any]:
+    if not training_dataset_id:
+        training_dataset_id = get_preprocessed_dataset_id()
+    response = call_rpc(
+        "SetTrainingDatasetRewardFn",
+        {
+            "trainingDatasetId": training_dataset_id,
+            "rewardFnId": reward_fn_id,
+        },
+    )
+    return response
 
 
 def save_preprocessed_tasks(tasks: list[Task]) -> dict[str, Any]:
