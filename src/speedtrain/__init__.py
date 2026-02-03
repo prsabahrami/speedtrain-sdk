@@ -11,6 +11,10 @@ from .tasks import (
     update_status,
     publish_reward_function,
     set_reward_function_for_dataset,
+    publish_split_function,
+    set_split_function_for_dataset,
+    run_reward_function,
+    run_split_function,
 )
 from .files import save_file, load_document
 from .types import Task, Completion, TaskSplit
@@ -30,6 +34,10 @@ __all__ = [
     "update_status",
     "publish_reward_function",
     "set_reward_function_for_dataset",
+    "publish_split_function",
+    "set_split_function_for_dataset",
+    "run_reward_function",
+    "run_split_function",
     "save_file",
     "load_document",
     "Task",

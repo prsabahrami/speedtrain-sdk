@@ -179,15 +179,90 @@ def publish_reward_function(score_fn) -> str:
 
 
 def set_reward_function_for_dataset(
-    *, reward_fn_id: str, training_dataset_id: str | None = None
+    *, reward_fn_id: str, training_dataset_id: str
 ) -> dict[str, Any]:
-    if not training_dataset_id:
-        training_dataset_id = get_preprocessed_dataset_id()
     response = call_rpc(
         "SetTrainingDatasetRewardFn",
         {
             "trainingDatasetId": training_dataset_id,
             "rewardFnId": reward_fn_id,
+        },
+    )
+    return response
+
+
+def publish_split_function(split_fn) -> str:
+    import hashlib
+    import inspect
+    import os
+    from pathlib import Path
+
+    if split_fn.__name__ != "split":
+        raise ValueError("split_fn must be named split")
+    source = inspect.getsource(split_fn)
+    module_bytes = source.encode("utf-8")
+    hash_value = hashlib.sha256(module_bytes).hexdigest()
+    notebook_path = os.environ.get("JPY_SESSION_NAME")
+    if not notebook_path:
+        raise RuntimeError("Must run from Speedtrain notebook")
+    notebook_id = Path(notebook_path).stem
+    split_dir = Path("/data/split_functions") / notebook_id
+    split_dir.mkdir(parents=True, exist_ok=True)
+    module_path = split_dir / f"{hash_value}.py"
+    module_path.write_text(source, encoding="utf-8")
+    split_fn_id = f"{notebook_id}:{hash_value}"
+    response = call_rpc(
+        "PublishSplitFunction",
+        {
+            "notebookId": notebook_id,
+            "splitFnId": split_fn_id,
+            "splitFnPath": str(module_path),
+            "splitFnHash": hash_value,
+        },
+    )
+    split_function = response.get("splitFunction", {})
+    return split_function.get("id", split_fn_id)
+
+
+def set_split_function_for_dataset(
+    *, split_fn_id: str, training_dataset_id: str
+) -> dict[str, Any]:
+    response = call_rpc(
+        "SetTrainingDatasetSplitFn",
+        {
+            "trainingDatasetId": training_dataset_id,
+            "splitFnId": split_fn_id,
+        },
+    )
+    return response
+
+
+def run_reward_function(*, training_dataset_id: str) -> dict[str, Any]:
+    response = call_rpc(
+        "RunRewardFunction",
+        {
+            "trainingDatasetId": training_dataset_id,
+        },
+    )
+    return response
+
+
+def run_split_function(
+    *,
+    preprocessed_dataset_id: str,
+    train_dataset_id: str | None = None,
+    train_dataset_name: str | None = None,
+    test_dataset_id: str | None = None,
+    test_dataset_name: str | None = None,
+) -> dict[str, Any]:
+    response = call_rpc(
+        "RunSplitFunction",
+        {
+            "preprocessedDatasetId": preprocessed_dataset_id,
+            "trainDatasetId": train_dataset_id,
+            "trainDatasetName": train_dataset_name,
+            "testDatasetId": test_dataset_id,
+            "testDatasetName": test_dataset_name,
         },
     )
     return response
